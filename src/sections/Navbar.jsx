@@ -10,11 +10,12 @@ import { FaPlay, FaPause } from "react-icons/fa";
 const navItems = ["Home", "About", "Features", "Story", "Contact"];
 
 const Navbar = () => {
-  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
-  const [isIndicatorActive, setIsIndicatorActive] = useState(true);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [isIndicatorActive, setIsIndicatorActive] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // NEW
+  const [showAudioPrompt, setShowAudioPrompt] = useState(false);
 
   const navContainerRef = useRef(null);
   const audioElementRef = useRef(null);
@@ -47,6 +48,27 @@ const Navbar = () => {
     setIsIndicatorActive((prev) => !prev);
   };
 
+
+  useEffect(() => {
+    const tryAutoPlay = async () => {
+      if (audioElementRef.current) {
+        try {
+          await audioElementRef.current.play();
+          setIsAudioPlaying(true);
+          setIsIndicatorActive(true);
+        } catch (error) {
+          // Autoplay failed, show fallback button
+          setShowAudioPrompt(true);
+          setIsAudioPlaying(false);
+          setIsIndicatorActive(false);
+        }
+      }
+    };
+
+    tryAutoPlay();
+  }, []);
+
+  
   useEffect(() => {
     if (isAudioPlaying) {
       audioElementRef.current.play();
@@ -94,7 +116,10 @@ const Navbar = () => {
             {/* Audio Button */}
             <button
               className="flex items-center justify-center relative w-8 h-8 text-violet-200 transition-all duration-200 ease-in-out hover:scale-110 hover:bg-white/10 rounded-full"
-              onClick={toggleAudioIndicator}
+              onClick={() => {
+                toggleAudioIndicator(true);
+                setShowAudioPrompt(false);
+              }}
             >
                 <audio
                     src="/audio/loop.mp3"
@@ -102,6 +127,20 @@ const Navbar = () => {
                     ref={audioElementRef}
                     className="hidden"
                 />
+                {showAudioPrompt && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevents outer button click
+                      audioElementRef.current.play();
+                      setShowAudioPrompt(false);
+                      setIsAudioPlaying(true);
+                      setIsIndicatorActive(true);
+                    }}
+                    className="absolute -bottom-10 text-xs bg-violet-200 text-violet-700 px-2 py-1 rounded-md shadow-md animate-pulse cursor-pointer"
+                  >
+                    Tap to enable audio
+                  </div>
+                )}
 
                 {/* Always show Play Icon */}
                 <FaPlay className="w-5 h-5 z-10 text-violet-200" />
