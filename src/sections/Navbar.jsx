@@ -48,6 +48,7 @@ const Navbar = () => {
     setIsIndicatorActive((prev) => !prev);
   };
 
+  
   useEffect(() => {
     const tryAutoPlay = async () => {
       if (audioElementRef.current) {
